@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>7일 안에 뜬 영상 TOP 20</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --ink: #0f1b2d;
+  --muted: #5b6678;
+  --line: #d9dfe9;
+  --accent: #e0311f;
+  --accent-soft: #fde8e5;
+  --chip-on-bg: #0f1b2d;
+  --chip-on-ink: #ffffff;
+  color-scheme: light;
+  box-sizing: border-box;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1420;
+    --surface: #152033;
+    --ink: #e8edf5;
+    --muted: #93a0b5;
+    --line: #26334b;
+    --accent: #ff6350;
+    --accent-soft: #3a1f1f;
+    --chip-on-bg: #e8edf5;
+    --chip-on-ink: #0d1420;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1420;
+  --surface: #152033;
+  --ink: #e8edf5;
+  --muted: #93a0b5;
+  --line: #26334b;
+  --accent: #ff6350;
+  --accent-soft: #3a1f1f;
+  --chip-on-bg: #e8edf5;
+  --chip-on-ink: #0d1420;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: inherit; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+.wrap { max-width: 980px; margin: 0 auto; padding: 28px 18px 56px; }
+
+h1 {
+  font-family: "Black Han Sans", "Noto Sans KR", sans-serif;
+  font-weight: 400;
+  font-size: clamp(2rem, 6.4vw, 3.4rem);
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+}
+.lede { margin: 0 0 28px; color: var(--muted); max-width: 60ch; }
+
+.filters {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 6px 18px;
+}
+.frow {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 8px 14px;
+  align-items: start;
+  padding: 14px 0;
+}
+.frow + .frow { border-top: 1px solid var(--line); }
+.flabel { font-size: 0.875rem; font-weight: 700; padding-top: 7px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.chip {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  min-height: 36px;
+}
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] {
+  background: var(--chip-on-bg);
+  color: var(--chip-on-ink);
+  border-color: var(--chip-on-bg);
+  font-weight: 700;
+}
+.chip:focus-visible, select:focus-visible, .retry:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+select {
+  font: inherit;
+  font-size: 0.9rem;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  min-height: 36px;
+}
+.hidden { display: none !important; }
+
+.result-head { margin: 32px 0 8px; }
+.result-head h2 { font-size: 1.05rem; margin: 0 0 2px; font-weight: 700; }
+.result-head p { margin: 0; color: var(--muted); font-size: 0.875rem; }
+
+.status { padding: 40px 0; color: var(--muted); }
+.retry {
+  font: inherit;
+  margin-left: 10px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+ol.list { list-style: none; margin: 0; padding: 0; }
+.row {
+  display: grid;
+  grid-template-columns: 3.6rem 168px 1fr 150px;
+  gap: 4px 16px;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+.rank {
+  font-family: "Black Han Sans", "Noto Sans KR", sans-serif;
+  font-size: clamp(2.1rem, 6vw, 3.2rem);
+  line-height: 1;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.55;
+}
+.row.top .rank { color: var(--accent); opacity: 1; }
+.thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.thumb img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.dur {
+  position: absolute;
+  right: 6px; bottom: 6px;
+  z-index: 1;
+  background: rgba(0,0,0,0.78);
+  color: #fff;
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.title { margin: 0 0 4px; font-size: 1rem; font-weight: 700; line-height: 1.4; }
+.title a { color: inherit; text-decoration: none; }
+.title a:hover { text-decoration: underline; }
+.meta {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-size: 0.84rem;
+  color: var(--muted);
+}
+.tag {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-weight: 700;
+}
+.views .num { font-size: 1.2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.views .unit { font-size: 0.84rem; color: var(--muted); margin-left: 2px; }
+.bar { height: 6px; background: var(--line); border-radius: 3px; margin-top: 6px; overflow: hidden; }
+.bar i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--ink);
+  opacity: 0.6;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+.row.top .bar i { background: var(--accent); opacity: 1; }
+.foot { margin-top: 28px; font-size: 0.84rem; color: var(--muted); max-width: 70ch; }
+
+@media (max-width: 680px) {
+  .wrap { padding: 20px 14px 44px; }
+  .frow { grid-template-columns: 1fr; gap: 6px; padding: 12px 0; }
+  .flabel { padding-top: 0; }
+  .filters { padding: 4px 14px; }
+  .row { grid-template-columns: 2.6rem 112px 1fr; gap: 4px 12px; align-items: start; }
+  .views { grid-column: 2 / 4; }
+  .title { font-size: 0.94rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bar i { transition: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>7일 안에 뜬 영상,<br>조회수 TOP 20</h1>
+  <p class="lede">국가, 카테고리, 업로드 기간, 영상 형식을 고르면 해당 조건에서 조회수가 가장 높은 영상 20개를 보여줍니다.</p>
+
+  <section class="filters" aria-label="필터">
+    <div class="frow">
+      <div class="flabel" id="lbl-country">국가</div>
+      <div class="chips" role="group" aria-labelledby="lbl-country">
+        <span id="country-chips" class="chips"></span>
+        <select id="sub-country" class="hidden" aria-label="그 외 국가 세부 선택"></select>
+      </div>
+    </div>
+    <div class="frow">
+      <div class="flabel" id="lbl-cat">카테고리</div>
+      <div class="chips" id="cat-chips" role="group" aria-labelledby="lbl-cat"></div>
+    </div>
+    <div class="frow">
+      <div class="flabel" id="lbl-period">업로드 기간</div>
+      <div class="chips" id="period-chips" role="group" aria-labelledby="lbl-period"></div>
+    </div>
+    <div class="frow">
+      <div class="flabel" id="lbl-format">영상 형식</div>
+      <div class="chips" id="format-chips" role="group" aria-labelledby="lbl-format"></div>
+    </div>
+  </section>
+
+  <div class="result-head" aria-live="polite">
+    <h2 id="summary"></h2>
+    <p id="count"></p>
+  </div>
+  <div id="status" class="status">데이터를 불러오는 중입니다…</div>
+  <ol class="list" id="list"></ol>
+
+  <p class="foot" id="foot"></p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DAY = 86400000;
+  var COUNTRIES = [
+    { id: "KR", label: "한국" },
+    { id: "US", label: "미국" },
+    { id: "JP", label: "일본" },
+    { id: "OT", label: "그 외 국가" }
+  ];
+  var OTHER = [
+    { id: "GB", label: "영국" },
+    { id: "DE", label: "독일" },
+    { id: "BR", label: "브라질" }
+  ];
+  var OTHER_LABEL = { GB: "영국", DE: "독일", BR: "브라질" };
+  var CATEGORIES = [
+    { id: "all", label: "전체" },
+    { id: "음악", label: "음악" },
+    { id: "게임", label: "게임" },
+    { id: "엔터테인먼트", label: "엔터테인먼트" },
+    { id: "스포츠", label: "스포츠" },
+    { id: "뉴스·정치", label: "뉴스·정치" },
+    { id: "교육", label: "교육" },
+    { id: "과학·기술", label: "과학·기술" },
+    { id: "코미디", label: "코미디" }
+  ];
+  var PERIODS = [
+    { id: 1, label: "24시간 이내", text: "최근 24시간" },
+    { id: 3, label: "3일 이내", text: "최근 3일" },
+    { id: 7, label: "7일 이내", text: "최근 7일" }
+  ];
+  var FORMATS = [
+    { id: "all", label: "전체" },
+    { id: "long", label: "롱폼" },
+    { id: "short", label: "쇼츠" }
+  ];
+
+  var state = { country: "KR", sub: "ALL", cat: "all", period: 7, format: "all" };
+  var payload = null;
+
+  function $(id) { return document.getElementById(id); }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+
+  /* ---------- 표시용 보조 함수 ---------- */
+  function fmtViews(n) {
+    if (n >= 100000000) return (n / 100000000).toFixed(1).replace(/\.0$/, "") + "억";
+    if (n >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, "") + "만";
+    return n.toLocaleString("ko-KR");
+  }
+  function fmtDur(s) {
+    var h = Math.floor(s / 3600);
+    var m = Math.floor((s % 3600) / 60);
+    var r = s % 60;
+    var rr = (r < 10 ? "0" : "") + r;
+    if (h > 0) return h + ":" + (m < 10 ? "0" : "") + m + ":" + rr;
+    return m + ":" + rr;
+  }
+  var dateFmt = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric" });
+  var dateTimeFmt = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Seoul", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" });
+
+  function hueOf(id) {
+    var h = 0;
+    for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 360;
+    return h;
+  }
+
+  /* ---------- 필터 버튼 ---------- */
+  function makeChips(containerId, items, key, onChange) {
+    var box = $(containerId);
+    items.forEach(function (it) {
+      var b = el("button", "chip", it.label);
+      b.type = "button";
+      b.dataset.value = String(it.id);
+      b.addEventListener("click", function () {
+        state[key] = it.id;
+        if (onChange) onChange();
+        render();
+      });
+      box.appendChild(b);
+    });
+  }
+  function syncChips(containerId, key) {
+    var btns = $(containerId).querySelectorAll(".chip");
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute("aria-pressed", btns[i].dataset.value === String(state[key]) ? "true" : "false");
+    }
+  }
+
+  var subSelect = $("sub-country");
+  var optAll = el("option", null, "전체 (그 외 국가)");
+  optAll.value = "ALL";
+  subSelect.appendChild(optAll);
+  OTHER.forEach(function (o) {
+    var opt = el("option", null, o.label);
+    opt.value = o.id;
+    subSelect.appendChild(opt);
+  });
+  subSelect.addEventListener("change", function () {
+    state.sub = subSelect.value;
+    render();
+  });
+
+  makeChips("country-chips", COUNTRIES, "country", function () { state.sub = "ALL"; subSelect.value = "ALL"; });
+  makeChips("cat-chips", CATEGORIES, "cat");
+  makeChips("period-chips", PERIODS, "period");
+  makeChips("format-chips", FORMATS, "format");
+
+  /* ---------- 데이터 불러오기 ---------- */
+  function showStatus(text, withRetry) {
+    var s = $("status");
+    s.textContent = text;
+    s.classList.remove("hidden");
+    if (withRetry) {
+      var b = el("button", "retry", "다시 시도");
+      b.type = "button";
+      b.addEventListener("click", load);
+      s.appendChild(b);
+    }
+  }
+
+  // 배포한 Apps Script 웹 앱 주소(…/exec)를 아래 따옴표 안에 붙여넣으세요.
+  // 이 주소는 공개용 데이터 주소이며 API 키와는 다릅니다.
+  var DATA_URL = "https://script.google.com/macros/s/AKfycbypACmSyE6u_ycxa9WLUCYubc7JypXE5tzyCsWPiFi1EMtkxjy_HsqKyl9E_gEVqmhY1w/exec";
+
+  function load() {
+    if (DATA_URL.indexOf("https://script.google.com/") !== 0) {
+      showStatus("데이터 주소가 아직 설정되지 않았습니다. index.html의 DATA_URL을 확인해주세요.", false);
+      return;
+    }
+    showStatus("데이터를 불러오는 중입니다…", false);
+    fetch(DATA_URL)
+      .then(function (res) {
+        if (!res.ok) throw new Error("http " + res.status);
+        return res.json();
+      })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.rows)) throw new Error("bad data");
+        payload = data;
+        render();
+      })
+      .catch(function () {
+        showStatus("데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.", true);
+      });
+  }
+
+  /* ---------- 화면 그리기 ---------- */
+  function render() {
+    syncChips("country-chips", "country");
+    syncChips("cat-chips", "cat");
+    syncChips("period-chips", "period");
+    syncChips("format-chips", "format");
+    subSelect.classList.toggle("hidden", state.country !== "OT");
+
+    var list = $("list");
+    list.textContent = "";
+    if (!payload) return;
+
+    if (!payload.rows.length) {
+      $("summary").textContent = "";
+      $("count").textContent = "";
+      showStatus("아직 수집된 데이터가 없습니다.", false);
+      return;
+    }
+    $("status").classList.add("hidden");
+
+    var ref = payload.updated || Date.now();
+    var seen = {};
+    var rows = [];
+    for (var i = 0; i < payload.rows.length; i++) {
+      var r = payload.rows[i];
+      if (r[0] !== state.country) continue;
+      if (state.country === "OT" && state.sub !== "ALL" && r[1] !== state.sub) continue;
+      if (state.cat !== "all" && r[2] !== state.cat) continue;
+      if (state.format === "long" && r[9]) continue;
+      if (state.format === "short" && !r[9]) continue;
+      if (ref - r[6] > state.period * DAY) continue;
+      if (seen[r[3]]) continue;
+      seen[r[3]] = 1;
+      rows.push(r);
+    }
+    rows.sort(function (a, b) { return b[7] - a[7]; });
+    rows = rows.slice(0, 20);
+
+    var cLabel = COUNTRIES.filter(function (c) { return c.id === state.country; })[0].label;
+    if (state.country === "OT" && state.sub !== "ALL") cLabel = OTHER_LABEL[state.sub] || state.sub;
+    var pText = PERIODS.filter(function (p) { return p.id === state.period; })[0].text;
+    var catText = state.cat === "all" ? "전체 카테고리" : state.cat + " 카테고리";
+    var fText = state.format === "all" ? "" : " " + FORMATS.filter(function (f) { return f.id === state.format; })[0].label;
+
+    $("summary").textContent = cLabel + ", " + pText + " 안에 올라온 " + catText + fText + " 영상";
+    $("count").textContent = "조회수 높은 순서로 " + rows.length + "개를 보여드려요.";
+    $("foot").textContent =
+      "마지막 수집: " + dateTimeFmt.format(new Date(ref)) + " (한국 시간). 업로드 기간과 조회수는 이 수집 시점 기준입니다. " +
+      "쇼츠는 영상 길이 3분 이하로 추정한 값이라 일부 가로 영상이 섞일 수 있습니다. 데이터 출처: YouTube Data API.";
+
+    if (!rows.length) {
+      list.appendChild(el("li", "status", "조건에 맞는 영상이 없습니다. 기간을 늘리거나 카테고리를 바꿔보세요."));
+      return;
+    }
+
+    var max = rows[0][7] || 1;
+    rows.forEach(function (d, idx) {
+      var id = d[3];
+      var safeId = /^[A-Za-z0-9_-]{11}$/.test(id);
+      var href = safeId ? "https://www.youtube.com/watch?v=" + id : null;
+      var li = el("li", "row" + (idx < 3 ? " top" : ""));
+      li.appendChild(el("div", "rank", String(idx + 1)));
+
+      var th = href ? el("a", "thumb") : el("div", "thumb");
+      if (href) { th.href = href; th.target = "_blank"; th.rel = "noopener noreferrer"; th.setAttribute("aria-label", d[4]); }
+      var h = hueOf(id);
+      th.style.background = "linear-gradient(135deg, hsl(" + h + " 40% 40%), hsl(" + ((h + 50) % 360) + " 45% 26%))";
+      if (/^https:\/\/i\.ytimg\.com\//.test(d[10])) {
+        var img = document.createElement("img");
+        img.src = d[10];
+        img.alt = "";
+        img.loading = "lazy";
+        img.referrerPolicy = "no-referrer";
+        img.addEventListener("error", function () { img.remove(); });
+        th.appendChild(img);
+      }
+      th.appendChild(el("span", "dur", fmtDur(d[8])));
+      li.appendChild(th);
+
+      var info = el("div", "info");
+      var h3 = el("h3", "title");
+      if (href) {
+        var a = el("a", null, d[4]);
+        a.href = href; a.target = "_blank"; a.rel = "noopener noreferrer";
+        h3.appendChild(a);
+      } else {
+        h3.textContent = d[4];
+      }
+      info.appendChild(h3);
+      var meta = el("p", "meta");
+      meta.appendChild(el("span", null, d[5]));
+      meta.appendChild(el("span", null, dateFmt.format(new Date(d[6])) + " 업로드"));
+      meta.appendChild(el("span", null, d[2]));
+      meta.appendChild(el("span", null, d[9] ? "쇼츠" : "롱폼"));
+      if (state.country === "OT") meta.appendChild(el("span", "tag", OTHER_LABEL[d[1]] || d[1]));
+      info.appendChild(meta);
+      li.appendChild(info);
+
+      var v = el("div", "views");
+      v.appendChild(el("span", "num", fmtViews(d[7])));
+      v.appendChild(el("span", "unit", "회"));
+      var bar = el("div", "bar");
+      var fill = document.createElement("i");
+      bar.appendChild(fill);
+      v.appendChild(bar);
+      li.appendChild(v);
+      list.appendChild(li);
+
+      (function (f, w) {
+        requestAnimationFrame(function () { f.style.width = w + "%"; });
+      })(fill, Math.max(3, Math.round((d[7] / max) * 100)));
+    });
+  }
+
+  render();
+  load();
+})();
+</script>
+</body>
+</html>
