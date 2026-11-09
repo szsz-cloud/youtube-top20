@@ -223,8 +223,8 @@ ol.list { list-style: none; margin: 0; padding: 0; }
 </head>
 <body>
 <div class="wrap">
-  <h1>7일 안에 뜬 영상,<br>조회수 TOP 20</h1>
-  <p class="lede">국가, 카테고리, 업로드 기간, 영상 형식을 고르면 해당 조건에서 조회수가 가장 높은 영상 20개를 보여줍니다.</p>
+  <h1>7일 안에 뜬 영상,<br>현지 인기 TOP 20</h1>
+  <p class="lede">각 나라의 유튜브 인기 차트에서 최근 7일 안에 올라온 영상만 모아, 국가, 카테고리, 업로드 기간, 영상 형식별 TOP 20을 보여줍니다.</p>
 
   <section class="filters" aria-label="필터">
     <div class="frow">
@@ -245,6 +245,10 @@ ol.list { list-style: none; margin: 0; padding: 0; }
     <div class="frow">
       <div class="flabel" id="lbl-format">영상 형식</div>
       <div class="chips" id="format-chips" role="group" aria-labelledby="lbl-format"></div>
+    </div>
+    <div class="frow">
+      <div class="flabel" id="lbl-sort">정렬</div>
+      <div class="chips" id="sort-chips" role="group" aria-labelledby="lbl-sort"></div>
     </div>
   </section>
 
@@ -282,7 +286,6 @@ ol.list { list-style: none; margin: 0; padding: 0; }
     { id: "엔터테인먼트", label: "엔터테인먼트" },
     { id: "스포츠", label: "스포츠" },
     { id: "뉴스·정치", label: "뉴스·정치" },
-    { id: "교육", label: "교육" },
     { id: "과학·기술", label: "과학·기술" },
     { id: "코미디", label: "코미디" }
   ];
@@ -296,8 +299,12 @@ ol.list { list-style: none; margin: 0; padding: 0; }
     { id: "long", label: "롱폼" },
     { id: "short", label: "쇼츠" }
   ];
+  var SORTS = [
+    { id: "rank", label: "현지 인기순" },
+    { id: "views", label: "조회수순" }
+  ];
 
-  var state = { country: "KR", sub: "ALL", cat: "all", period: 7, format: "all" };
+  var state = { country: "KR", sub: "ALL", cat: "all", period: 7, format: "all", sort: "rank" };
   var payload = null;
 
   function $(id) { return document.getElementById(id); }
@@ -371,6 +378,7 @@ ol.list { list-style: none; margin: 0; padding: 0; }
   makeChips("cat-chips", CATEGORIES, "cat");
   makeChips("period-chips", PERIODS, "period");
   makeChips("format-chips", FORMATS, "format");
+  makeChips("sort-chips", SORTS, "sort");
 
   /* ---------- 데이터 불러오기 ---------- */
   function showStatus(text, withRetry) {
@@ -416,6 +424,7 @@ ol.list { list-style: none; margin: 0; padding: 0; }
     syncChips("cat-chips", "cat");
     syncChips("period-chips", "period");
     syncChips("format-chips", "format");
+    syncChips("sort-chips", "sort");
     subSelect.classList.toggle("hidden", state.country !== "OT");
 
     var list = $("list");
@@ -445,7 +454,16 @@ ol.list { list-style: none; margin: 0; padding: 0; }
       seen[r[3]] = 1;
       rows.push(r);
     }
-    rows.sort(function (a, b) { return b[7] - a[7]; });
+    // 현지 인기 차트 순위: '전체' 카테고리는 전체 차트 순위, 특정 카테고리는 그 카테고리 차트 순위를 씁니다.
+    function rankOf(r) {
+      var k = state.cat === "all" ? r[11] : r[12];
+      return k > 0 ? k : 99999;
+    }
+    if (state.sort === "rank") {
+      rows.sort(function (a, b) { return (rankOf(a) - rankOf(b)) || (b[7] - a[7]); });
+    } else {
+      rows.sort(function (a, b) { return b[7] - a[7]; });
+    }
     rows = rows.slice(0, 20);
 
     var cLabel = COUNTRIES.filter(function (c) { return c.id === state.country; })[0].label;
@@ -455,9 +473,10 @@ ol.list { list-style: none; margin: 0; padding: 0; }
     var fText = state.format === "all" ? "" : " " + FORMATS.filter(function (f) { return f.id === state.format; })[0].label;
 
     $("summary").textContent = cLabel + ", " + pText + " 안에 올라온 " + catText + fText + " 영상";
-    $("count").textContent = "조회수 높은 순서로 " + rows.length + "개를 보여드려요.";
+    $("count").textContent = (state.sort === "rank" ? "현지 인기 차트 순서로 " : "조회수 높은 순서로 ") + rows.length + "개를 보여드려요.";
     $("foot").textContent =
-      "마지막 수집: " + dateTimeFmt.format(new Date(ref)) + " (한국 시간). 업로드 기간과 조회수는 이 수집 시점 기준입니다. " +
+      "마지막 수집: " + dateTimeFmt.format(new Date(ref)) + " (한국 시간). 각 나라의 유튜브 인기 차트에서 최근 7일 안에 올라온 영상만 골랐고, " +
+      "‘현지 인기순’은 그 나라 인기 차트의 순위입니다. 조회수는 전 세계 합계이며 수집 시점 기준입니다. " +
       "쇼츠는 영상 길이 3분 이하로 추정한 값이라 일부 가로 영상이 섞일 수 있습니다. 데이터 출처: YouTube Data API.";
 
     if (!rows.length) {
@@ -504,6 +523,7 @@ ol.list { list-style: none; margin: 0; padding: 0; }
       meta.appendChild(el("span", null, dateFmt.format(new Date(d[6])) + " 업로드"));
       meta.appendChild(el("span", null, d[2]));
       meta.appendChild(el("span", null, d[9] ? "쇼츠" : "롱폼"));
+      if (state.sort === "rank" && rankOf(d) < 99999) meta.appendChild(el("span", null, "현지 차트 " + rankOf(d) + "위"));
       if (state.country === "OT") meta.appendChild(el("span", "tag", OTHER_LABEL[d[1]] || d[1]));
       info.appendChild(meta);
       li.appendChild(info);
